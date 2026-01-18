@@ -265,6 +265,26 @@ header h1 {
     color: var(--text-secondary);
 }
 
+.report-link {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.report-link:hover {
+    text-decoration: underline;
+}
+
+.report-link.secondary {
+    color: var(--text-secondary);
+    font-weight: 500;
+    font-size: 0.85rem;
+}
+
+.report-link.secondary:hover {
+    color: var(--primary-color);
+}
+
 .report-badges {
     display: flex;
     gap: 0.5rem;
@@ -282,6 +302,11 @@ header h1 {
 .badge.newsworthy {
     background: #d1fae5;
     color: #065f46;
+}
+
+.badge.summary {
+    background: #e0e7ff;
+    color: #3730a3;
 }
 
 .badge.posted {

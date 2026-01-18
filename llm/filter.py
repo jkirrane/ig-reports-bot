@@ -24,6 +24,8 @@ Abstract: {abstract}
 
 Determine if this report is newsworthy enough to share publicly.
 
+IMPORTANT: If this is a "Semiannual Report" or summary report that mentions multiple cases, it is NOT newsworthy unless it contains a major revelation. These are routine congressional reports that summarize past work.
+
 NEWSWORTHY criteria (any of these):
 ✓ Fraud cases, especially $1M+
 ✓ Criminal investigations or charges
@@ -37,6 +39,7 @@ NEWSWORTHY criteria (any of these):
 ✓ Large-scale embezzlement or theft
 
 NOT newsworthy:
+✗ Semiannual reports or summaries (routine congressional reports)
 ✗ Routine financial audits with clean findings
 ✗ Minor process recommendations
 ✗ IT infrastructure reports (unless breach)
@@ -91,13 +94,27 @@ def filter_report(report: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         Or None on error
     """
     try:
+        # Use PDF text if available, otherwise fall back to abstract/title
+        if report.get('pdf_text'):
+            # Use first 8000 chars of PDF (~2000 tokens)
+            content = report['pdf_text'][:8000]
+            content_type = f"PDF excerpt ({report.get('pdf_pages', '?')} pages)"
+        elif report.get('abstract'):
+            content = report['abstract'][:1500]
+            content_type = "Abstract"
+        else:
+            content = report.get('title', 'Unknown')
+            content_type = "Title only"
+        
+        logger.info(f"Filtering with {content_type}: {len(content)} chars")
+        
         # Build prompt
         prompt = FILTER_PROMPT_TEMPLATE.format(
             title=report.get('title', 'Unknown'),
             agency_name=report.get('agency_name', 'Unknown Agency'),
             report_type=report.get('report_type', 'Report'),
             published_date=report.get('published_date', 'Unknown'),
-            abstract=report.get('abstract', '')[:1500]  # Truncate very long abstracts
+            abstract=content
         )
         
         # Call LLM with JSON response format

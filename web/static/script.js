@@ -131,6 +131,9 @@ function createReportCard(report) {
     if (report.newsworthy) {
         badges.push(`<span class="badge newsworthy">Newsworthy</span>`);
     }
+    if (report.is_summary) {
+        badges.push(`<span class="badge summary">Summary Report</span>`);
+    }
     if (report.posted) {
         badges.push(`<span class="badge posted">Posted to Bluesky</span>`);
     }
@@ -185,13 +188,19 @@ function createReportCard(report) {
     }
     
     // Build card HTML
+    const primaryLink = report.pdf_url || report.url;
     card.innerHTML = `
         <div class="report-header">
             <div class="report-title">
-                <h3><a href="${report.url}" target="_blank">${report.title}</a></h3>
+                <h3><a href="${primaryLink}" target="_blank">${report.title}</a></h3>
                 <div class="report-meta">
                     <span>📅 ${formattedDate}</span>
                     <span>🏛️ ${report.agency_name}</span>
+                    ${report.pdf_url ? 
+                        `<span><a href="${report.pdf_url}" target="_blank" class="report-link">📄 View PDF →</a></span>
+                         <span><a href="${report.url}" target="_blank" class="report-link secondary">🔗 Report Page</a></span>` :
+                        `<span><a href="${report.url}" target="_blank" class="report-link">📄 Read Full Report →</a></span>`
+                    }
                 </div>
             </div>
             <div class="report-badges">

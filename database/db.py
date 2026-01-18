@@ -90,8 +90,8 @@ def upsert_report(report: Dict[str, Any]) -> int:
                 cursor.execute(query, update_values)
         else:
             # Insert new report
-            columns = ['report_id', 'url', 'agency_id', 'agency_name', 'title', 
-                      'report_type', 'published_date', 'abstract']
+            columns = ['report_id', 'url', 'pdf_url', 'agency_id', 'agency_name', 'title', 
+                      'report_type', 'published_date', 'abstract', 'pdf_text', 'pdf_pages']
             values = []
             
             # Only include columns that are in the report dict

@@ -9,6 +9,7 @@ from bs4 import BeautifulSoup
 import logging
 
 from .base import BaseScraper
+from .pdf_extractor import extract_pdf_text
 
 
 logger = logging.getLogger(__name__)
@@ -81,13 +82,16 @@ class OversightGovScraper(BaseScraper):
             # Add reports that are within our date range
             for report in reports:
                 if report.get('published_date'):
-                    report_date = datetime.fromisoformat(report['published_date']).date()
+                    # Handle ISO format with Z suffix
+                    date_str = report['published_date'].replace('Z', '+00:00')
+                    report_date = datetime.fromisoformat(date_str).date()
                     if report_date >= cutoff_date:
                         all_reports.append(report)
             
             # If oldest report on this page is older than cutoff, stop
             if oldest_date:
-                oldest = datetime.fromisoformat(oldest_date).date()
+                oldest_date_str = oldest_date.replace('Z', '+00:00')
+                oldest = datetime.fromisoformat(oldest_date_str).date()
                 if oldest < cutoff_date:
                     self.logger.info(f"Reached reports older than {cutoff_date}, stopping")
                     break
@@ -108,30 +112,25 @@ class OversightGovScraper(BaseScraper):
         soup = BeautifulSoup(html, 'lxml')
         reports = []
         
-        # Find all report cards - adjust selector based on actual HTML structure
-        # This is a common pattern but may need adjustment
-        report_cards = soup.select('.views-row, .report-card, article.node--type-report')
+        # Find all table rows - oversight.gov uses a table layout
+        table_rows = soup.find_all('tr', class_='listing-table__row')
         
-        if not report_cards:
-            # Try alternative selectors
-            report_cards = soup.select('article')
+        self.logger.debug(f"Found {len(table_rows)} report table rows")
         
-        self.logger.debug(f"Found {len(report_cards)} potential report cards")
-        
-        for card in report_cards:
+        for row in table_rows:
             try:
-                report = self._parse_report_card(card)
+                report = self._parse_report_row(row)
                 if report:
                     reports.append(report)
             except Exception as e:
-                self.logger.warning(f"Failed to parse report card: {e}")
+                self.logger.warning(f"Failed to parse report row: {e}")
                 continue
         
         return reports
     
-    def _parse_report_card(self, element) -> Optional[Dict[str, Any]]:
+    def _parse_report_row(self, row) -> Optional[Dict[str, Any]]:
         """
-        Extract report data from a single report card element
+        Extract report data from a single table row
         
         Returns:
             Report dictionary or None if parsing fails
@@ -139,64 +138,114 @@ class OversightGovScraper(BaseScraper):
         try:
             report = {}
             
-            # Extract title and URL
-            title_elem = element.select_one('h2 a, h3 a, .field--name-title a, a.report-title')
-            if not title_elem:
-                # Try any link with substantial text
-                title_elem = element.find('a', string=lambda s: s and len(s.strip()) > 20)
+            # Extract title
+            title_cell = row.find('td', class_='views-field-title')
+            if title_cell:
+                report['title'] = title_cell.get_text(strip=True)
+                report['abstract'] = report['title']  # Use title as abstract
             
-            if not title_elem:
-                return None
-            
-            report['title'] = title_elem.get_text(strip=True)
-            report['url'] = title_elem.get('href', '')
-            
-            # Make URL absolute
-            if report['url'].startswith('/'):
-                report['url'] = self.BASE_URL + report['url']
-            
-            # Generate report_id from URL or title
-            report['report_id'] = self._extract_report_id(report['url'], report['title'])
-            
-            # Extract agency
-            agency_elem = element.select_one('.field--name-field-agency, .agency, .report-agency')
-            if agency_elem:
-                agency_text = agency_elem.get_text(strip=True)
-                report['agency_name'] = agency_text
-                report['agency_id'] = self._normalize_agency_id(agency_text)
-            else:
-                # Try to extract from URL or title
-                report['agency_name'] = self._extract_agency_from_text(report['title'])
-                report['agency_id'] = self._normalize_agency_id(report['agency_name'])
+            # Extract link to report page
+            link_cell = row.find('td', class_='action-cell')
+            if link_cell:
+                link = link_cell.find('a')
+                if link:
+                    href = link.get('href', '')
+                    if href.startswith('/'):
+                        report['url'] = self.BASE_URL + href
+                    else:
+                        report['url'] = href
             
             # Extract date
-            date_elem = element.select_one('.field--name-field-publish-date, .date, time, .report-date')
-            if date_elem:
-                date_text = date_elem.get_text(strip=True)
-                report['published_date'] = self._parse_date(date_text)
-            else:
-                # Use current date as fallback
-                report['published_date'] = datetime.now().isoformat()
+            date_cell = row.find('td', class_='views-field-field-report-date-issued')
+            if date_cell:
+                time_elem = date_cell.find('time')
+                if time_elem:
+                    datetime_str = time_elem.get('datetime', '')
+                    if datetime_str:
+                        report['published_date'] = datetime_str
+            
+            # Extract agency
+            agency_cell = row.find('td', class_='views-field-field-report-agency-reviewed')
+            if agency_cell:
+                agency_text = agency_cell.get_text(strip=True)
+                report['agency_name'] = agency_text
+                report['agency_id'] = self._normalize_agency_id(agency_text)
             
             # Extract report type
-            type_elem = element.select_one('.field--name-field-report-type, .report-type')
-            if type_elem:
-                report['report_type'] = type_elem.get_text(strip=True)
-            else:
+            type_cell = row.find('td', class_='views-field-field-report-type')
+            if type_cell:
+                report['report_type'] = type_cell.get_text(strip=True)
+            
+            # Generate report_id from URL
+            if report.get('url'):
+                # Extract the last part of the URL as report_id
+                url_parts = report['url'].rstrip('/').split('/')
+                report['report_id'] = url_parts[-1] if url_parts else report.get('url')
+            
+            # Check if we got minimum required fields
+            if not report.get('title') or not report.get('url') or not report.get('agency_name'):
+                return None
+            
+            # Use current date as fallback if no date found
+            if not report.get('published_date'):
+                report['published_date'] = datetime.now().isoformat()
+            
+            # Use generic type if none found
+            if not report.get('report_type'):
                 report['report_type'] = 'Report'
             
-            # Extract abstract/summary
-            abstract_elem = element.select_one('.field--name-body, .summary, .description, .report-summary')
-            if abstract_elem:
-                report['abstract'] = abstract_elem.get_text(strip=True)
-            else:
-                # Use title as fallback
-                report['abstract'] = report['title']
+            # Fetch PDF link from report landing page
+            if report.get('url'):
+                pdf_url = self._fetch_pdf_url(report['url'])
+                if pdf_url:
+                    report['pdf_url'] = pdf_url
+                    
+                    # Extract PDF text for LLM analysis
+                    pdf_data = extract_pdf_text(pdf_url)
+                    if pdf_data:
+                        report['pdf_text'] = pdf_data['text']
+                        report['pdf_pages'] = pdf_data['pages']
+                        self.logger.info(f"📄 Extracted {pdf_data['chars']:,} chars from PDF ({pdf_data['pages']} pages)")
             
             return report
         
         except Exception as e:
-            self.logger.warning(f"Error parsing report card: {e}")
+            self.logger.warning(f"Error parsing report row: {e}")
+            return None
+    
+    def _fetch_pdf_url(self, report_url: str) -> Optional[str]:
+        """
+        Fetch the PDF URL from a report landing page
+        
+        Args:
+            report_url: URL of the report landing page
+            
+        Returns:
+            Full URL to PDF file, or None if not found
+        """
+        try:
+            html = self.fetch_page(report_url)
+            if not html:
+                return None
+            
+            soup = BeautifulSoup(html, 'lxml')
+            
+            # Look for PDF link
+            pdf_link = soup.find('a', href=lambda x: x and '.pdf' in x.lower())
+            if pdf_link:
+                href = pdf_link.get('href', '')
+                if href.startswith('/'):
+                    return self.BASE_URL + href
+                elif href.startswith('http'):
+                    return href
+                else:
+                    # Relative URL
+                    return self.BASE_URL + '/' + href.lstrip('/')
+            
+            return None
+            
+        except Exception as e:
+            self.logger.warning(f"Error fetching PDF URL from {report_url}: {e}")
             return None
     
     def _extract_report_id(self, url: str, title: str) -> str:

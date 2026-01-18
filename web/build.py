@@ -111,6 +111,13 @@ def generate_data_json(reports: List[Dict[str, Any]]):
     }
     
     for report in reports:
+        # Check if this is a summary report
+        title_lower = report['title'].lower()
+        is_summary = ('semiannual' in title_lower or 
+                     'semi-annual' in title_lower or
+                     'quarterly report' in title_lower or
+                     'annual report to congress' in title_lower)
+        
         data['reports'].append({
             'id': report['id'],
             'title': report['title'],
@@ -119,6 +126,7 @@ def generate_data_json(reports: List[Dict[str, Any]]):
             'published_date': report['published_date'],
             'report_type': report['report_type'],
             'url': report['url'],
+            'pdf_url': report.get('pdf_url'),
             'newsworthy': bool(report.get('passed_llm_filter')),
             'score': report.get('newsworthy_score'),
             'reason': report.get('llm_filter_reason'),
@@ -127,7 +135,8 @@ def generate_data_json(reports: List[Dict[str, Any]]):
             'dollar_amount': report.get('dollar_amount'),
             'criminal': bool(report.get('criminal')),
             'posted': bool(report.get('posted')),
-            'posted_at': report.get('posted_at')
+            'posted_at': report.get('posted_at'),
+            'is_summary': is_summary
         })
     
     # Write JSON file

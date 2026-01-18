@@ -7,7 +7,8 @@ CREATE TABLE IF NOT EXISTS ig_reports (
     
     -- Identifiers
     report_id TEXT NOT NULL UNIQUE,           -- Unique ID from Oversight.gov
-    url TEXT NOT NULL,                        -- Link to full report
+    url TEXT NOT NULL,                        -- Link to full report landing page
+    pdf_url TEXT,                             -- Direct link to PDF file
     
     -- Basic info
     agency_id TEXT NOT NULL,                  -- Short code: DOD, HHS, VA, etc.
@@ -18,6 +19,8 @@ CREATE TABLE IF NOT EXISTS ig_reports (
     
     -- Content
     abstract TEXT,                            -- Report abstract/summary from source
+    pdf_text TEXT,                            -- Extracted text from PDF (first 20 pages)
+    pdf_pages INTEGER,                        -- Number of pages extracted
     summary TEXT,                             -- LLM-generated plain English summary
     
     -- Metadata extracted by LLM
