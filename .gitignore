@@ -52,10 +52,6 @@ llm_usage.log
 htmlcov/
 .tox/
 
-# Generated files
-docs/
-*.html
-
 # Jupyter
 .ipynb_checkpoints
 

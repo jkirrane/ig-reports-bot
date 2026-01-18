@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IG Reports Bot - Federal Inspector General Reports</title>
+    <meta name="description" content="Automated tracking of federal Inspector General reports highlighting fraud, waste, and abuse in government.">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>🛡️ IG Reports Bot</h1>
+            <p class="tagline">Tracking Federal Inspector General Reports</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Stats Section -->
+        <section class="stats">
+            <div class="stat-card">
+                <div class="stat-number">10</div>
+                <div class="stat-label">Total Reports</div>
+            </div>
+            <div class="stat-card highlight">
+                <div class="stat-number">2</div>
+                <div class="stat-label">Newsworthy</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">0</div>
+                <div class="stat-label">Posted to Bluesky</div>
+            </div>
+        </section>
+
+        <!-- About Section -->
+        <section class="about">
+            <h2>About This Bot</h2>
+            <p>
+                This bot automatically scrapes federal Inspector General reports from 
+                <a href="https://www.oversight.gov" target="_blank">Oversight.gov</a>, 
+                uses AI to identify newsworthy findings on fraud, waste, and abuse, and posts them to 
+                <a href="https://bsky.app" target="_blank">Bluesky</a> in plain language.
+            </p>
+            <p class="last-updated">Last updated: January 18, 2026 at 04:08 PM</p>
+        </section>
+
+        <!-- Filters Section -->
+        <section class="filters">
+            <h2>Filter Reports</h2>
+            <div class="filter-controls">
+                <div class="filter-group">
+                    <label for="search">Search:</label>
+                    <input type="text" id="search" placeholder="Search titles, agencies...">
+                </div>
+                
+                <div class="filter-group">
+                    <label for="agency-filter">Agency:</label>
+                    <select id="agency-filter">
+                        <option value="">All Agencies</option>
+                        <option value="Department of Justice">Department of Justice</option>
+<option value="Department of State">Department of State</option>
+<option value="Election Assistance Commission">Election Assistance Commission</option>
+<option value="Export-Import Bank">Export-Import Bank</option>
+<option value="Federal Trade Commission">Federal Trade Commission</option>
+<option value="National Aeronautics and Space Administration">National Aeronautics and Space Administration</option>
+<option value="Small Business Administration">Small Business Administration</option>
+<option value="Tennessee Valley Authority">Tennessee Valley Authority</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="newsworthy-filter">Status:</label>
+                    <select id="newsworthy-filter">
+                        <option value="">All Reports</option>
+                        <option value="newsworthy">Newsworthy Only</option>
+                        <option value="posted">Posted to Bluesky</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="sort">Sort By:</label>
+                    <select id="sort">
+                        <option value="date-desc">Date (Newest)</option>
+                        <option value="date-asc">Date (Oldest)</option>
+                        <option value="score-desc">Score (Highest)</option>
+                        <option value="score-asc">Score (Lowest)</option>
+                    </select>
+                </div>
+                
+                <button id="reset-filters" class="btn-secondary">Reset</button>
+            </div>
+        </section>
+
+        <!-- Results Count -->
+        <div class="results-info">
+            <span id="results-count">Loading reports...</span>
+        </div>
+
+        <!-- Reports Section -->
+        <section class="reports" id="reports-container">
+            <div class="loading">Loading reports...</div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>
+                Built with ❤️ for government accountability | 
+                <a href="https://github.com/jkirrane/ig-reports-bot" target="_blank">GitHub</a> | 
+                <a href="https://bsky.app/profile/igoversight.bsky.social" target="_blank">Follow on Bluesky</a>
+            </p>
+            <p class="disclaimer">
+                This is an automated bot. Information is sourced from official Inspector General reports. 
+                Always verify important details with the original source.
+            </p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

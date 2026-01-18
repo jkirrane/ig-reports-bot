@@ -1,0 +1,11 @@
+# Jekyll configuration for GitHub Pages
+# Tells GitHub Pages to serve the docs/ directory as-is
+
+# Disable Jekyll processing
+include:
+  - data/reports.json
+
+# Exclude unnecessary files
+exclude:
+  - README.md
+  - .gitignore
