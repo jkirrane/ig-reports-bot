@@ -1,0 +1,56 @@
+name: Daily IG Reports Scrape
+
+on:
+  schedule:
+    # Run daily at 8 AM ET (1 PM UTC)
+    - cron: '0 13 * * *'
+  workflow_dispatch:  # Allow manual triggers
+
+jobs:
+  scrape-and-update:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for proper commits
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: Run daily pipeline
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          echo "Starting daily scrape..."
+          python run_daily.py
+      
+      - name: Rebuild website
+        run: |
+          echo "Rebuilding website..."
+          python -m web.build --days-back 30
+      
+      - name: Commit and push changes
+        run: |
+          git config --global user.name "IG Reports Bot"
+          git config --global user.email "bot@ig-reports-bot.github.io"
+          git add database/ig_reports.db docs/
+          git diff --staged --quiet || (git commit -m "Daily update: $(date +%Y-%m-%d)" && git push)
+      
+      - name: Summary
+        run: |
+          echo "✅ Daily pipeline completed"
+          echo "📊 Database updated"
+          echo "🌐 Website regenerated"
+          if [ -f database/ig_reports.db ]; then
+            echo "📈 Reports in database: $(sqlite3 database/ig_reports.db 'SELECT COUNT(*) FROM ig_reports;')"
+          fi
