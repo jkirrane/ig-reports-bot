@@ -101,6 +101,9 @@ python -m scrapers.oversight_gov --dry-run
 
 # Run full pipeline (dry run)
 python run_daily.py --dry-run
+
+# Build website
+python -m web.build --days-back 30
 ```
 
 ---
@@ -136,8 +139,12 @@ python -m bot.post_reports
 ### Build Website
 
 ```bash
-python -m web.build
+python -m web.build --days-back 30
 open docs/index.html
+
+# Or serve locally
+cd docs && python -m http.server 8000
+# Visit http://localhost:8000
 ```
 
 ---
