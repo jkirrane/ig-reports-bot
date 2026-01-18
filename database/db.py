@@ -124,7 +124,7 @@ def upsert_report(report: Dict[str, Any]) -> int:
 
 def get_unfiltered_reports(limit: int = 100) -> List[Dict[str, Any]]:
     """
-    Get reports that passed keyword filter but haven't been LLM filtered yet
+    Get reports that haven't been LLM filtered yet
     
     Args:
         limit: Maximum number of reports to return
@@ -137,8 +137,7 @@ def get_unfiltered_reports(limit: int = 100) -> List[Dict[str, Any]]:
     
     query = """
         SELECT * FROM ig_reports 
-        WHERE passed_keyword_filter = 1 
-        AND passed_llm_filter = 0
+        WHERE passed_llm_filter = 0
         AND newsworthy_score IS NULL
         ORDER BY published_date DESC
         LIMIT ?

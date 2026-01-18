@@ -56,11 +56,7 @@ def run_scraping(days_back: int = 1, dry_run: bool = False) -> int:
         logger.warning("No reports found")
         return 0
     
-    logger.info(f"Found {len(reports)} reports")
-    
-    # Filter by keyword
-    filtered_reports = [r for r in reports if r.get('passed_keyword_filter')]
-    logger.info(f"  {len(filtered_reports)} passed keyword filter ({len(filtered_reports)/len(reports)*100:.1f}%)")
+    logger.info(f"Found {len(reports)} reports (all will be sent to LLM for evaluation)")
     
     # Save to database
     if not dry_run:
@@ -289,7 +285,6 @@ def main():
         stats = get_stats()
         logger.info(f"Database stats:")
         logger.info(f"  Total reports: {stats['total_reports']}")
-        logger.info(f"  Passed keyword filter: {stats['passed_keyword_filter']}")
         logger.info(f"  Passed LLM filter: {stats['passed_llm_filter']}")
         logger.info(f"  Posted: {stats['posted']}")
         logger.info(f"  Pending posts: {stats['pending_posts']}")

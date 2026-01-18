@@ -60,12 +60,11 @@ ig-reports-bot/
   - Title, URL, agency, date, type
   - Abstract/summary
   - Report ID
-- Keyword pre-filtering (fraud, waste, abuse, criminal, etc.)
 - Handles pagination
 - Generates unique report IDs
 - Normalizes agency names to short codes
 
-**Keyword filter:** Reduces volume by ~60% before LLM
+**All reports sent to LLM:** No pre-filtering for better coverage
 
 ### 🤖 LLM Integration (GPT-4o-mini)
 
@@ -212,9 +211,9 @@ python test_setup.py            # Full validation
 
 ## 💰 Projected Costs
 
-- **Scraping & Filtering:** 100 reports/day × $0.003 = $0.30/month
-- **Summarization:** 10 posts/day × $0.010 = $0.30/month
-- **Total:** ~$0.60-1/month (well under $2 budget)
+- **LLM Filtering:** 100 reports/day × 30 days × $0.0003 = $0.90/month
+- **Summarization:** 15 posts/day × 30 days × $0.0015 = $0.68/month
+- **Total:** ~$1.58/month (well under $2 budget)
 
 ## 🚀 How to Use Right Now
 

@@ -193,9 +193,6 @@ class OversightGovScraper(BaseScraper):
                 # Use title as fallback
                 report['abstract'] = report['title']
             
-            # Apply keyword filter
-            report['passed_keyword_filter'] = self._has_interesting_keywords(report)
-            
             return report
         
         except Exception as e:
@@ -296,27 +293,7 @@ class OversightGovScraper(BaseScraper):
         self.logger.warning(f"Could not parse date: {date_text}")
         return datetime.now().isoformat()
     
-    def _has_interesting_keywords(self, report: Dict[str, Any]) -> bool:
-        """
-        Check if report contains newsworthy keywords
-        
-        Returns:
-            True if report likely contains interesting content
-        """
-        # Combine searchable text
-        searchable_text = ' '.join([
-            report.get('title', ''),
-            report.get('abstract', ''),
-            report.get('report_type', '')
-        ]).lower()
-        
-        # Check for any interesting keyword
-        for keyword in INTERESTING_KEYWORDS:
-            if keyword in searchable_text:
-                self.logger.debug(f"✅ Keyword match: '{keyword}' in report: {report['title'][:50]}")
-                return True
-        
-        return False
+
 
 
 def main():
@@ -329,18 +306,14 @@ def main():
     reports = scraper.scrape_recent_reports(days_back=2)
     
     print(f"\n📊 Scraped {len(reports)} reports")
-    
-    # Show filtered reports
-    filtered = [r for r in reports if r.get('passed_keyword_filter')]
-    print(f"   {len(filtered)} passed keyword filter ({len(filtered)/len(reports)*100:.1f}%)")
+    print(f"   All reports will be evaluated by LLM (no keyword pre-filtering)")
     
     # Show sample
     print("\n📝 Sample reports:")
-    for report in reports[:3]:
+    for report in reports[:5]:
         print(f"\n- {report['title'][:80]}")
         print(f"  Agency: {report['agency_name']} ({report['agency_id']})")
         print(f"  Date: {report['published_date']}")
-        print(f"  Keyword filter: {'✅' if report['passed_keyword_filter'] else '❌'}")
         print(f"  URL: {report['url']}")
 
 
